@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     Button startStopMeasureButton;
     TextView heartRateValueView;
     TextView respirationValueView;
+    TextView sbpValueView;
+    TextView dbpValueView;
     Intent intentBluetooth;
     static MenuItem bluetoothMenuItem;
     MenuItem realTimeBreathingMenuItem;
@@ -70,10 +72,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     //Graphs
     private Graph graphHeartRate;
     private Graph graphRespiration;
+    private GraphForBP graphBloodPressure;
     double yHeartRate;
     double yRespiration;
+    double yBloodPressureSBP;
+    double yBloodPressureDBP;
     DataPoint dataHeartRate;
     DataPoint dataRespiration;
+    DataPoint dataBloodBressureSBP;
+    DataPoint dataBloodBressureDBP;
     private double dataNumber = 0; // simulated data number
     int maxDataPoints = 1000;
     ImageButton heartButton; // button to display the reliability of the measured heart rate
@@ -81,8 +88,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     // fix the graph view bug
     ArrayList<DataPoint> dataPointsHeartRate = new ArrayList<>(); // saves the data to be used later if the graph has to be fixed
     ArrayList<DataPoint> dataPointsRespiration = new ArrayList<>();
+    ArrayList<DataPoint> dataPointsBloodPressureSBP = new ArrayList<>();
+    ArrayList<DataPoint> dataPointsBloodPressureDBP = new ArrayList<>();
+    ArrayList<DataPoint> seriesSBP = new ArrayList<>();
+    ArrayList<DataPoint> seriesDBP = new ArrayList<>();
     boolean firstDataHeartRate = true;
     boolean firstDataRespiration = true;
+    boolean firstDataBloodPressureSBP = true;
+    boolean firstDataBloodPressureDBP = true;
     boolean resume = false; // when the activity is resumed
     static int scrollToEnd = 100; // to set amount of values to scroll to the end
     // Booleans for taping
@@ -92,6 +105,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     boolean isTapingRespiration = false;
     boolean tapWaitLoopRunningRespiration = false;
     boolean newTapRespiration = false;
+    boolean isTapingBloodPressure = false;
+    boolean tapWaitLoopRunningBloodPressure = false;
+    boolean newTapBloodPressure = false;
 
     /**
      * On start up: creates the graphs and starts the BluetoothService service that auto connects to
@@ -107,6 +123,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         startStopMeasureButton = findViewById(R.id.startStopMeasureButton); // Start button
         heartRateValueView = findViewById(R.id.heartRateValueView);
         respirationValueView = findViewById(R.id.respirationValueView);
+        sbpValueView = findViewById(R.id.sbpValueView);
+        dbpValueView = findViewById(R.id.dbpValueView);
         screenWidth =  getResources().getDisplayMetrics().widthPixels; // used to set padding and text size in the graphs
         display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay(); // to get screen orientation
         //heartView = findViewById(R.id.heart);
@@ -118,6 +136,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 getResources().getColor(R.color.colorGraphHeartRate), true, screenWidth);
         graphRespiration = new Graph(findViewById(R.id.graphRespiration),getApplicationContext(),
                 getResources().getColor(R.color.colorGraphRespiration), true, screenWidth);
+        graphBloodPressure = new GraphForBP(findViewById(R.id.graphBloodPressure),getApplicationContext(),
+                getResources().getColor(R.color.colorGraphBloodPressureSBP),
+                getResources().getColor(R.color.colorGraphBloodPressureDBP), true, screenWidth);
         graphHeartRate.getViewport().setOnXAxisBoundsChangedListener(new Viewport.OnXAxisBoundsChangedListener() {
             @Override
             public void onXAxisBoundsChanged(double minX, double maxX, Viewport.OnXAxisBoundsChangedListener.Reason reason) {
@@ -138,6 +159,17 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     tapWaitLoopRespiration();
                 } else {
                     newTapRespiration = true;
+                }
+            }
+        });
+        graphBloodPressure.getViewport().setOnXAxisBoundsChangedListener(new Viewport.OnXAxisBoundsChangedListener() {
+            @Override
+            public void onXAxisBoundsChanged(double minX, double maxX, Viewport.OnXAxisBoundsChangedListener.Reason reason) {
+                isTapingBloodPressure = true;
+                if (!tapWaitLoopRunningBloodPressure) {
+                    tapWaitLoopBloodPressure();
+                } else {
+                    newTapBloodPressure = true;
                 }
             }
         });
@@ -387,6 +419,31 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     /**
+     * Loop that runs when the graph has been tapped on.
+     * Waits 100 ms before the graph can automatically change the view bounds.
+     * Loops as long new tap is made.
+     */
+    void tapWaitLoopBloodPressure() {
+        Thread tapWaitLoopThread = new Thread() {
+            @Override
+            public void run() {
+                do {
+                    newTapBloodPressure = false;
+                    try {
+                        sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } while (newTapBloodPressure);
+                tapWaitLoopRunningBloodPressure = false;
+                isTapingBloodPressure = false;
+            }
+        };
+        tapWaitLoopRunningBloodPressure = true;
+        tapWaitLoopThread.start();
+    }
+
+    /**
      * Sets the graph view bounds to reasonable size values.
      * @param value current x-value
      * @param graph the graph to change view bounds on
@@ -394,6 +451,34 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      * @return if view bounds should change or not
      */
     boolean setGraphViewBounds(double value, Graph graph, boolean isTaping) {
+        if (!isTaping) {
+            double diff = graph.getViewport().getMaxX(false) -
+                    graph.getViewport().getMinX(false);
+            if (scrollToEnd < 5) {
+                if (value > graph.getViewport().getMinX(false) + diff) {
+                    scrollToEnd ++;
+                    return true;
+                }
+            }
+            if (value > graph.getViewport().getMinX(false) + diff && value <
+                    graph.getViewport().getMinX(false) + diff*1.3) {
+                return true;
+            } else if (graph.getViewport().getMinX(true) > graph.getViewport().getMaxX(false) - 0.2*diff) {
+                graph.getViewport().setMaxX(graph.getViewport().getMaxX(false) + diff * 0.9);
+                graph.getViewport().setMinX(graph.getViewport().getMinX(false) + diff * 0.9);
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Sets the graph view bounds for blood pressure to reasonable size values.
+     * @param value current x-value
+     * @param graph the graph to change view bounds on
+     * @param isTaping if just tapped
+     * @return if view bounds should change or not
+     */
+    boolean setGraphViewBoundsForBP(double value, GraphForBP graph, boolean isTaping) {
         if (!isTaping) {
             double diff = graph.getViewport().getMaxX(false) -
                     graph.getViewport().getMinX(false);
@@ -442,8 +527,12 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     public void addData() {
         yHeartRate = Math.sin(dataNumber*3/30)*4+70+Math.random()*4;
         yRespiration = Math.sin(dataNumber/20)*4+22+Math.random()*3;
+        yBloodPressureSBP = Math.sin(dataNumber*3/30)*4+120+Math.random()*4;
+        yBloodPressureDBP = Math.sin(dataNumber*3/30)*4+90+Math.random()*4;
         dataHeartRate = new DataPoint(dataNumber,yHeartRate);
         dataRespiration = new DataPoint(dataNumber, yRespiration);
+        dataBloodBressureSBP = new DataPoint(dataNumber, yBloodPressureSBP);
+        dataBloodBressureDBP = new DataPoint(dataNumber, yBloodPressureDBP);
         dataNumber += 1;
         runOnUiThread(new Runnable() {
             @Override
@@ -451,9 +540,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 if (!resume) {
                     dataPointsHeartRate.add(dataHeartRate);
                     dataPointsRespiration.add(dataRespiration);
+                    dataPointsBloodPressureSBP.add(dataBloodBressureSBP);
+                    dataPointsBloodPressureDBP.add(dataBloodBressureDBP);
                     if (dataPointsHeartRate.size() > maxDataPoints) {
                         dataPointsHeartRate.remove(0);
                         dataPointsRespiration.remove(0);
+                        dataPointsBloodPressureSBP.remove(0);
+                        dataPointsBloodPressureDBP.remove(0);
                     }
                     graphHeartRate.getSeries().appendData(dataHeartRate,
                             setGraphViewBounds(dataNumber, graphHeartRate, isTapingHeartRate) ||
@@ -465,11 +558,23 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                     firstDataHeartRate, maxDataPoints, isActive);
                     respirationValueView.setText(getString(R.string.respiration_rate_value,
                             String.format(Locale.getDefault(),"%.1f", yRespiration)));
+                    graphBloodPressure.getSeriesSBP().appendData(dataBloodBressureSBP,
+                            setGraphViewBoundsForBP(dataNumber, graphBloodPressure, isTapingHeartRate) ||
+                                    firstDataHeartRate, maxDataPoints, isActive);
+                    sbpValueView.setText(getString(R.string.sbp_value,
+                            String.format(Locale.getDefault(),"%.1f", yBloodPressureSBP)));
+                    graphBloodPressure.getSeriesDBP().appendData(dataBloodBressureDBP,
+                            setGraphViewBoundsForBP(dataNumber, graphBloodPressure, isTapingHeartRate) ||
+                                    firstDataHeartRate, maxDataPoints, isActive);
+                    dbpValueView.setText(getString(R.string.dbp_value,
+                            String.format(Locale.getDefault(),"%.1f", yBloodPressureDBP)));
                     if (firstDataHeartRate) {
                         graphHeartRate.getViewport().setMinX(0);
                         graphHeartRate.getViewport().setMaxX(120);
                         graphRespiration.getViewport().setMinX(0);
                         graphRespiration.getViewport().setMaxX(120);
+                        graphBloodPressure.getViewport().setMinX(0);
+                        graphBloodPressure.getViewport().setMaxX(120);
                     }
                     firstDataHeartRate = false;
                 }
@@ -488,9 +593,28 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 public void run() {
                     graphHeartRate.fixGraphView(dataPointsHeartRate.toArray());
                     graphRespiration.fixGraphView(dataPointsRespiration.toArray());
+                    graphBloodPressure.fixGraphView(dataPointsBloodPressureSBP.toArray(), dataPointsBloodPressureDBP.toArray());
                     resume = false;
                     if (b.commandSimulate) {
                         scrollToEnd = 0;
+                    }
+                    if (graphBloodPressure.getViewport().getMaxX(true) > graphBloodPressure.getViewport().
+                            getMaxX(false)) {graphBloodPressure.getViewport().scrollToEnd();
+                    }
+                    if (!b.commandSimulate && !firstStartMeasurement) {
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (dataPointsBloodPressureSBP.size() > 0) {
+                                    graphBloodPressure.getSeriesSBP().appendData(dataPointsBloodPressureSBP.get(dataPointsBloodPressureSBP.size() - 1),
+                                            false, maxDataPoints, false);
+                                }
+                                if (dataPointsBloodPressureDBP.size() > 0) {
+                                    graphBloodPressure.getSeriesDBP().appendData(dataPointsBloodPressureDBP.get(dataPointsBloodPressureDBP.size() - 1),
+                                            false, maxDataPoints, false);
+                                }
+                            }
+                        }, 100);
                     }
                     if (graphRespiration.getViewport().getMaxX(true) > graphRespiration.getViewport().getMaxX(false)) {
                         graphRespiration.getViewport().scrollToEnd();
@@ -561,6 +685,37 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     /**
+     * Sets the blood pressure from real data using current time
+     * @param sbpData systolic blood pressure
+     * @param dbpData diastolic blood pressure
+     */
+    public void setBloodPressureData(double sbpData, double dbpData) {
+        dataBloodBressureSBP = new DataPoint(((System.currentTimeMillis() - startTime)/1000.0), sbpData);
+        dataPointsBloodPressureSBP.add(dataBloodBressureSBP);
+        if (dataPointsBloodPressureSBP.size() > maxDataPoints) {
+            dataPointsBloodPressureSBP.remove(0);
+        }
+        graphBloodPressure.getSeriesSBP().appendData(dataBloodBressureSBP, false, maxDataPoints, isActive);
+        sbpValueView.setText(getString(R.string.sbp_value,"" + Math.round(sbpData)));
+        if(setGraphViewBoundsForBP(
+                ((System.currentTimeMillis() - startTime)/1000.0), graphBloodPressure, isTapingBloodPressure)) {
+            graphBloodPressure.getViewport().scrollToEnd();
+        }
+
+        dataBloodBressureDBP = new DataPoint(((System.currentTimeMillis() - startTime)/1000.0), dbpData);
+        dataPointsBloodPressureDBP.add(dataBloodBressureDBP);
+        if (dataPointsBloodPressureDBP.size() > maxDataPoints) {
+            dataPointsBloodPressureDBP.remove(0);
+        }
+        graphBloodPressure.getSeriesDBP().appendData(dataBloodBressureDBP, false, maxDataPoints, isActive);
+        dbpValueView.setText(getString(R.string.dbp_value,"" + Math.round(dbpData)));
+        if(setGraphViewBoundsForBP(
+                ((System.currentTimeMillis() - startTime)/1000.0), graphBloodPressure, isTapingBloodPressure)) {
+           graphBloodPressure.getViewport().scrollToEnd();
+        }
+    }
+
+    /**
      * Resets the graphs to origin.
      * All data i the series is lost.
      */
@@ -568,10 +723,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         dataNumber = 0;
         graphHeartRate.resetSeries();
         graphRespiration.resetSeries();
+        graphBloodPressure.resetSeries();
         heartRateValueView.setText(getString(R.string.heart_rate_reset));
         respirationValueView.setText(getString(R.string.respiration_rate_reset));
+        sbpValueView.setText(getString(R.string.sbp_reset));
+        dbpValueView.setText(getString(R.string.dbp_reset));
         dataPointsHeartRate = new ArrayList<>();
         dataPointsRespiration = new ArrayList<>();
+        seriesSBP = new ArrayList<>();
+        seriesDBP = new ArrayList<>();
         if (measurementRunning) {
             startTime = System.currentTimeMillis();
         } else {
@@ -756,6 +916,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                                     //Toast.makeText(getApplicationContext(),
                                     //        getString(R.string.could_not_parse_real_time_breathing), Toast.LENGTH_SHORT).show();
                                 }
+                            }
+                            break;
+                        case "BP":
+                            try {
+                                setBloodPressureData(Double.parseDouble(split[1]), Double.parseDouble(split[3]));
+                            } catch (NumberFormatException e) {
+                                Toast.makeText(getApplicationContext(),
+                                        getString(R.string.could_not_parse_blood_pressure), Toast.LENGTH_SHORT).show();
                             }
                             break;
                         default:

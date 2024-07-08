@@ -15,15 +15,18 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
         android:background="@color/colorMeasureButtonDisabled"
         android:enabled="false"
         android:onClick="measureOnClick"
         android:text="@string/start_measure"
         android:textColor="@color/colorMeasureButtonDisabledText"
+        app:layout_constraintTop_toBottomOf="@+id/serialNumberEditText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        />
 
     <!-- Heart Rate value -->
     <TextView
@@ -31,16 +34,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
         android:text="@string/heart_rate_reset"
         android:textColor="@android:color/white"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/respirationValueView"
+        android:textSize="22sp"
+        app:layout_constraintTop_toBottomOf="@id/graphHeartRate"
+        app:layout_constraintBottom_toTopOf="@+id/graphRespiration"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        />
 
     <!-- Respiration Rate value -->
     <TextView
@@ -49,36 +53,64 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
         android:text="@string/respiration_rate_reset"
         android:textColor="@android:color/white"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toTopOf="@+id/startStopMeasureButton"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toTopOf="@+id/graphBloodPressure"
+        app:layout_constraintTop_toBottomOf="@id/graphRespiration"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="0.528"
+        app:layout_constraintStart_toStartOf="parent"
+        />
 
     <!-- Respiration Graph -->
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graphRespiration"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="110dp"
         android:layout_marginStart="14dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
         app:layout_constraintBottom_toTopOf="@+id/respirationValueView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/heartRateValueView" />
+        app:layout_constraintTop_toBottomOf="@+id/heartRateValueView"
+        app:layout_constraintVertical_bias="1.0"
+        />
 
     <!-- Heart Rate Graph -->
     <com.jjoe64.graphview.GraphView
         android:id="@+id/graphHeartRate"
         android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_height="110dp"
         android:layout_marginStart="14dp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/heartRateValueView"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintVertical_bias="1.0"
+        />
 
+    <!-- Blood Pressure Graph -->
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graphBloodPressure"
+        android:layout_width="0dp"
+        android:layout_height="110dp"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/serialNumberEditText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/respirationValueView"
+        />
+
+    <!-- x Heart Rate -->
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
@@ -93,8 +125,10 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/graphHeartRate"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="1.0"
+        />
 
+    <!-- x Respiration Rate -->
     <TextView
         android:id="@+id/textView2"
         android:layout_width="wrap_content"
@@ -108,8 +142,27 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/graphRespiration"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintVertical_bias="1.0"
+        />
 
+    <!-- x Blood Pressure -->
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/time_s"
+        android:textColor="@color/colorGraphGrid"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@+id/graphBloodPressure"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/graphBloodPressure"
+        app:layout_constraintVertical_bias="1.0"
+        />
+
+    <!-- y Heart Rate -->
     <TextView
         android:id="@+id/textView3"
         android:layout_width="wrap_content"
@@ -126,8 +179,10 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/graphHeartRate"
-        app:layout_constraintVertical_bias="0.45" />
+        app:layout_constraintVertical_bias="0.45"
+        />
 
+    <!-- y Respiration Rate -->
     <TextView
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
@@ -144,8 +199,30 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/graphRespiration"
-        app:layout_constraintVertical_bias="0.45" />
+        app:layout_constraintVertical_bias="0.45"
+        />
 
+    <!-- y Blood Pressure -->
+    <TextView
+        android:id="@+id/textView6"
+        android:layout_width="wrap_content"
+        android:layout_height="112dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:rotation="270"
+        android:text="@string/blood_pressure_mmHg"
+        android:textAllCaps="false"
+        android:textColor="@color/colorGraphGrid"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@+id/textView5"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/graphBloodPressure"
+        app:layout_constraintVertical_bias="0.45"
+        />
+
+    <!-- Heart Rate Reliability -->
     <ImageButton
         android:id="@+id/heart_button"
         android:layout_width="wrap_content"
@@ -162,6 +239,70 @@
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/graphHeartRate"
-        app:srcCompat="@drawable/heart_red" />
+        app:srcCompat="@drawable/heart_red"
+        />
+
+    <!-- Systolic Blood Pressure value -->
+    <TextView
+        android:id="@+id/sbpValueView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="0dp"
+        android:text="@string/sbp_reset"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        app:layout_constraintTop_toBottomOf="@+id/graphBloodPressure"
+        app:layout_constraintBottom_toTopOf="@+id/serialNumberEditText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/dbpValueView"
+        />
+
+    <!-- Diastolic Blood Pressure value -->
+    <TextView
+        android:id="@+id/dbpValueView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="0dp"
+        android:text="@string/dbp_reset"
+        android:textColor="@android:color/white"
+        android:textSize="22sp"
+        app:layout_constraintTop_toBottomOf="@+id/graphBloodPressure"
+        app:layout_constraintBottom_toTopOf="@+id/serialNumberEditText"
+        app:layout_constraintStart_toEndOf="@+id/sbpValueView"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <!-- User Serial Number -->
+    <EditText
+        android:id="@+id/serialNumberEditText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="0dp"
+        android:hint="Enter Serial Number"
+        android:textColorHint="@color/colorPrimarySettings"
+        android:inputType="number"
+        android:digits="0123456789"
+        android:maxLines="1"
+        app:layout_constraintTop_toBottomOf="@+id/graphBloodPressure"
+        app:layout_constraintBottom_toTopOf="@+id/startStopMeasureButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="20dp" />
 
 </android.support.constraint.ConstraintLayout>

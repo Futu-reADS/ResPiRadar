@@ -20,8 +20,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
-
-import java.util.Calendar;
 import java.util.List;
 //import androidx.annotation.NonNull;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -336,35 +334,6 @@ public class Settings extends AppCompatActivity implements PreferenceFragment.On
                                 b.connectedThread.write(sendCommand);
                                 preference.setSummary((String)newValue);
                                 Toast.makeText(getActivity().getApplicationContext(), getString(R.string.start_writing_to_file), Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.not_connected_to_rpi), Toast.LENGTH_LONG).show();
-                            }
-                            break;
-                        case "closecsv": // close CSV files on the Raspberry Pi
-                            if (b.connected) {
-                                byte[] sendCommand = command.getBytes();
-                                b.connectedThread.write(sendCommand);
-                                preference.setSummary((String)newValue);
-                                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.start_closing_csv_file), Toast.LENGTH_LONG).show();
-                            } else {
-                                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.not_connected_to_rpi), Toast.LENGTH_LONG).show();
-                            }
-                            break;
-                        case "syncdatetime": // synchronize the date and time on Raspberry Pi
-                            if (b.connected) {
-                                Calendar cal = Calendar.getInstance();
-                                String tempString = String.format("date -s '%4d-%02d-%02d %02d:%02d:%02d'",
-                                        cal.get(Calendar.YEAR),
-                                        cal.get(Calendar.MONTH) + 1,
-                                        cal.get(Calendar.DAY_OF_MONTH),
-                                        cal.get(Calendar.HOUR_OF_DAY),
-                                        cal.get(Calendar.MINUTE),
-                                        cal.get(Calendar.SECOND)
-                                );
-                                byte[] sendCommand = tempString.getBytes();
-                                b.connectedThread.write(sendCommand);
-                                preference.setSummary((String)newValue);
-                                Toast.makeText(getActivity().getApplicationContext(), getString(R.string.start_synchronizing_date_and_time), Toast.LENGTH_LONG).show();
                             } else {
                                 Toast.makeText(getActivity().getApplicationContext(), getString(R.string.not_connected_to_rpi), Toast.LENGTH_LONG).show();
                             }

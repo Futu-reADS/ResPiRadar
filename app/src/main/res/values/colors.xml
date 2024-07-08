@@ -17,6 +17,8 @@
     <color name="colorGraphGrid">#DCDCDC</color>
     <color name="colorGraphRespiration">#E6E6E6</color>
     <color name="colorGraphHeartRate">#FF5F53</color>
+    <color name="colorGraphBloodPressureSBP">#FF5353</color>
+    <color name="colorGraphBloodPressureDBP">#5353FF</color>
 
     <!-- Button colors -->
     <color name="colorMeasureButtonOn">#40A0FC</color>
