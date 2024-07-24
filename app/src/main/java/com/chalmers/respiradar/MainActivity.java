@@ -652,14 +652,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      * Sets the heart rate from real data using current time
      * @param heartRateData heart rate
      */
-    public void setHeartRateData(int heartRateData) {
+    public void setHeartRateData(double heartRateData) {
         dataHeartRate = new DataPoint(((System.currentTimeMillis() - startTime)/1000.0),heartRateData);
         dataPointsHeartRate.add(dataHeartRate);
         if (dataPointsHeartRate.size() > maxDataPoints) {
             dataPointsHeartRate.remove(0);
         }
         graphHeartRate.getSeries().appendData(dataHeartRate, false,maxDataPoints,isActive);
-        heartRateValueView.setText(getString(R.string.heart_rate_value,"" + heartRateData));
+        heartRateValueView.setText(getString(R.string.heart_rate_value,"" + Math.round(heartRateData)));
         if(setGraphViewBounds(
                 ((System.currentTimeMillis() - startTime)/1000.0), graphHeartRate, isTapingHeartRate)) {
             graphHeartRate.getViewport().scrollToEnd();
@@ -837,7 +837,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     switch (split[0]) {
                         case "HR":
                             try {
-                                setHeartRateData(Integer.parseInt(split[1]));
+                                setHeartRateData(Double.parseDouble(split[1]));
                             } catch (NumberFormatException e) {
                                 Toast.makeText(getApplicationContext(),
                                         getString(R.string.could_not_parse_heart_rate), Toast.LENGTH_SHORT).show();
