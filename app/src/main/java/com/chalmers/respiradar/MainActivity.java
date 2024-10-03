@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -22,6 +23,7 @@ import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -108,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     boolean isTapingBloodPressure = false;
     boolean tapWaitLoopRunningBloodPressure = false;
     boolean newTapBloodPressure = false;
+    private EditText serialNumberEditText;
 
     /**
      * On start up: creates the graphs and starts the BluetoothService service that auto connects to
@@ -188,6 +191,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         registerReceiver(ResetGraphBroadcastReceiver, intentFilterResetGraph);
         IntentFilter intentFilterStartMeasButton = new IntentFilter(BluetoothService.START_MEAS_BUTTON_ENABLE);
         registerReceiver(StartMeasButtonBroadcastReceiver, intentFilterStartMeasButton);
+        serialNumberEditText = findViewById(R.id.serialNumberEditText);
+        serialNumberEditText.setTextColor(Color.WHITE);
+        serialNumberEditText.setEnabled(true);
     }
 
     @Override
@@ -335,24 +341,36 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
      */
     public void measureOnClick(View view) {
         if (!measurementRunning) { // starts measuring
-            startStopMeasureButton.setBackgroundColor(getResources().getColor(R.color.colorMeasureButtonOff));
-            startStopMeasureButton.setText(getString(R.string.stop_measure));
-            if (firstStartMeasurement) {
-                startTime = System.currentTimeMillis();
-            }
-            firstStartMeasurement = false;
-            if (b.commandSimulate) {
-                loopAddData();
-            }
-            scrollToEnd = 0;
-            this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-            realTimeBreathingMenuItem.setEnabled(true);
-            if (!b.commandSimulate) {
-                String command = "startMeasure";
-                byte[] sendCommand = command.getBytes();
-                b.connectedThread.write(sendCommand);
+            String serialNumber = serialNumberEditText.getText().toString();
+            if (serialNumber.isEmpty()) {
+                // エラーメッセージを表示
+                Toast.makeText(MainActivity.this, "Please enter your serial number. Limited to numbers.", Toast.LENGTH_SHORT).show();
+            } else {
+                // シリアル番号をBluetooth経由で送信する処理を実装
+                serialNumberEditText.setTextColor(Color.LTGRAY);
+                serialNumberEditText.setEnabled(false);
+                startStopMeasureButton.setBackgroundColor(getResources().getColor(R.color.colorMeasureButtonOff));
+                startStopMeasureButton.setText(getString(R.string.stop_measure));
+                if (firstStartMeasurement) {
+                    startTime = System.currentTimeMillis();
+                }
+                firstStartMeasurement = false;
+                if (b.commandSimulate) {
+                    loopAddData();
+                }
+                scrollToEnd = 0;
+                this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                realTimeBreathingMenuItem.setEnabled(true);
+                if (!b.commandSimulate) {
+                        String command = "startMeasure " + serialNumber;
+                    byte[] sendCommand = command.getBytes();
+                    b.connectedThread.write(sendCommand);
+                }
             }
         } else { // stops measuring
+            serialNumberEditText.setText("");
+            serialNumberEditText.setTextColor(Color.WHITE);
+            serialNumberEditText.setEnabled(true);
             startStopMeasureButton.setBackgroundColor(getResources().getColor(R.color.colorMeasureButtonOn));
             startStopMeasureButton.setText(getString(R.string.start_measure));
             this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -739,6 +757,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
         firstDataHeartRate = true;
         firstDataRespiration = true;
+        serialNumberEditText.setText("");
+        serialNumberEditText.setEnabled(true);
     }
 
     /**
